@@ -1,0 +1,1 @@
+Openapi server stub generator for NestJS projects. More details to be added

@@ -1,0 +1,3 @@
+# Exclude TypeScript source files
+*.ts
+!*.d.ts
