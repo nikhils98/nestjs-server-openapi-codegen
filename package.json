@@ -4,7 +4,7 @@
   "types": "index.d.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist"
+    "start": "tsc && node dist"
   },
   "dependencies": {
     "js-yaml": "^4.1.0"
