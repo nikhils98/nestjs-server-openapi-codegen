@@ -1,0 +1,13 @@
+import { Controller, {{#each imports}}{{this}}{{#unless @last}}, {{/unless}}{{/each}} } from '@nestjs/common'
+
+@Controller()
+export class {{title}}Controller {
+  constructor(private readonly {{domainName}}Service: {{domainName}}Service) {}
+
+  {{#each paths}}
+  @{{methodType}}('{{path}}')
+  async {{methodName}}({{#each this.parameters}}@{{in}}('{{name}}') {{name}}: {{schema.schemaType}}{{#unless @last}}, {{/unless}}{{/each}}) {
+    return this.{{../domainName}}Service.{{methodName}}({{#each serviceParams}}{{this}}{{#unless @last}}, {{/unless}}{{/each}})
+  }
+  {{/each}}
+}

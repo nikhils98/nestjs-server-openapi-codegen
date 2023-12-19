@@ -7,7 +7,10 @@
     "start": "tsc && node dist"
   },
   "dependencies": {
-    "js-yaml": "^4.1.0"
+    "@types/lodash": "^4.14.202",
+    "handlebars": "^4.7.8",
+    "js-yaml": "^4.1.0",
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",

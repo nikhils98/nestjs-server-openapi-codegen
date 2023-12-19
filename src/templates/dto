@@ -1,0 +1,14 @@
+import { {{#each validators}} {{this}}{{#unless @last}}, {{/unless}}{{/each}} } from 'class-validator';
+
+{{#each classes}}
+export class {{name}} {
+  {{#each properties}}
+  {{#each validators}}
+  {{this}}
+  {{/each}}
+  {{name}}: {{type}}
+  
+  {{/each}}
+}
+
+{{/each}}

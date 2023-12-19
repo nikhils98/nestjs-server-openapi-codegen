@@ -26,11 +26,14 @@ paths:
           content:
             application/json:
               schema:
+                title: 'ItemResponse'
                 type: object
                 properties:
                   items:
+                    title: 'Items'
                     type: array
                     items:
+                      title: 'Item'
                       type: object
                       properties:
                         id:
@@ -38,4 +41,15 @@ paths:
                         name:
                           type: string
                         description:
-                          type: string
+                          title: Description
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                        history:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              age:
+                                type: string
