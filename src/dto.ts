@@ -1,6 +1,6 @@
 import { readFile } from 'fs/promises'
 import { compile } from 'handlebars'
-import { OpenApi, Schema } from './openapi'
+// import { OpenApi, Schema } from './openapi'
 import { camelCase, upperFirst } from 'lodash'
 
 export interface Property {
@@ -17,7 +17,7 @@ export interface Dto {
   classes: DtoClass[]
 }
 
-export async function generateDtos(api: OpenApi) {
+export async function generateDtos(api: any) {
   const templateFile = await readFile('src/templates/dto', 'utf-8')
   const template = compile(templateFile)
 
@@ -36,30 +36,30 @@ export async function generateDtos(api: OpenApi) {
   console.log(content)
 }
 
-function getClassFromSchema(classes: DtoClass[], schema: Schema) {
+function getClassFromSchema(classes: DtoClass[], schema: any) {
   const dtoClass: DtoClass = {
     name: upperFirst(schema.title),
     properties: [],
   }
   if (schema.type === 'object') {
     for (const prop of schema.properties!) {
-      if (prop.type === 'string') {
-        dtoClass.properties.push({
-          name: camelCase(prop.title),
-          type: prop.type,
-        })
-      } else if (prop.type === 'object') {
+      if (prop.type === 'object') {
         dtoClass.properties.push({
           name: camelCase(prop.title),
           type: upperFirst(prop.title),
         })
         getClassFromSchema(classes, prop)
-      } else {
+      } else if (prop.type === 'array') {
         dtoClass.properties.push({
           name: camelCase(prop.title),
           type: upperFirst(prop.items?.title + '[]'),
         })
         getClassFromSchema(classes, prop)
+      } else {
+        dtoClass.properties.push({
+          name: camelCase(prop.title),
+          type: prop.type,
+        })
       }
     }
     classes.push(dtoClass)

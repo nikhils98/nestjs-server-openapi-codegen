@@ -1,16 +1,15 @@
 import { readFile } from 'fs/promises'
 import * as yaml from 'js-yaml'
-import { OpenApi } from './openapi'
 import { generateDtos } from './dto'
+import { mapToOpenApi } from './openapi/openapi_mapper'
 
 run()
 
 async function run() {
-  const filePath = 'sample_openapi_specs/items.yml'
+  const filePath = 'sample_openapi_specs/guitars.yml'
   const data = await readOpenApiSpecFile(filePath)
-  const api = new OpenApi(data)
+  const api = mapToOpenApi(data)
   console.log(JSON.stringify(api, null, 4))
-  generateDtos(api)
 }
 
 async function readOpenApiSpecFile(filePath: string): Promise<any> {

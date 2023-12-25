@@ -1,0 +1,142 @@
+openapi: 3.0.0
+info:
+  title: Guitars Api
+  version: 1.0.0
+paths:
+  /guitars:
+    get:
+      description: Returns a list of guitars
+      parameters:
+        - $ref: "#/components/parameters/PageNum"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        '200':
+          $ref: "#/components/responses/GetGuitarsResponse"
+    post:
+      summary: Add a guitar
+      requestBody:
+        $ref: "#/components/requestBodies/AddGuitarRequestBody"
+      responses:
+        '201':
+          $ref: "#/components/responses/AddGuitarResponse"
+  /guitars/{id}:
+    get:
+      summary: Get a guitar by id
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        '200':
+          $ref: "#/components/responses/UpdateGuitarResponse"
+    put:
+      summary: Update a guitar
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        $ref: "#/components/requestBodies/UpdateGuitarRequestBody"
+      responses:
+        '200':
+          $ref: "#/components/responses/UpdateGuitarResponse"
+components:
+  parameters:
+    PageNum:
+      name: pageNum
+      in: query
+      required: false
+      schema:
+        type: integer
+    PageSize:
+      name: pageSize
+      in: query
+      required: false
+      schema:
+        type: integer
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: 
+        $ref: "#/components/schemas/Id"
+  requestBodies:
+    AddGuitarRequestBody:
+      content:
+        application/json:
+          schema: 
+            $ref: "#/components/schemas/Guitar"
+    UpdateGuitarRequestBody:
+      content:
+        application/json:
+          schema: 
+            $ref: "#/components/schemas/Guitar"
+  responses:
+    GetGuitarsResponse:
+      description: A list of guitars
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GetGuitarsResponse"
+    AddGuitarResponse:
+      description: Guitar with id
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GuitarWithId"
+    GetGuitarResponse:
+      description: Guitar with id
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GuitarWithId"
+    UpdateGuitarResponse:
+      description: Guitar with id
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/GuitarWithId"
+  schemas:
+    Id:
+      type: string
+      format: uuid
+    Guitar:
+      title: Guitar
+      type: object
+      required:
+        - 'name'
+        - 'price'
+        - 'type'
+        - 'variants'
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          minimum: 1
+        type:
+          type: string
+          enum: [acoustic, semi-acoustic, electric]
+        variants:
+          type: array
+          items:
+            $ref: "#/components/schemas/GuitarVariant"
+    GuitarVariant:
+      type: object
+      required:
+        - 'color'
+      properties:
+        color:
+          type: string
+    GuitarWithId:
+      allOf:
+        - type: object
+          properties:
+            id:
+              $ref: "#/components/schemas/Id"
+        - $ref: "#/components/schemas/Guitar"
+    GetGuitarsResponse:
+      type: object
+      properties:
+        guitars:
+          type: array
+          items:
+            $ref: "#/components/schemas/GuitarWithId"
