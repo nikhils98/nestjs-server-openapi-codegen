@@ -69,6 +69,13 @@ function toSchema(schema: any): Schema | Reference {
         return toReference(schema, 'schema')
     }
 
+    if(schema.allOf) {
+        return {
+            type: 'allOf',
+            combinations: schema.allOf.map(s => toSchema(s))
+        }
+    } 
+    
     return {
         type: schema.type,
         title: schema.title,

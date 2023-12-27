@@ -1,69 +1,90 @@
 import { readFile } from 'fs/promises'
 import { compile } from 'handlebars'
-// import { OpenApi, Schema } from './openapi'
 import { camelCase, upperFirst } from 'lodash'
+import { OpenApi, Reference, Schema } from './openapi/interfaces'
+
+export interface Validator {
+  name: string
+}
 
 export interface Property {
   name: string
   type: string
-}
-
-export interface DtoClass {
-  name: string
-  properties: Property[]
+  validators: Validator[]
 }
 
 export interface Dto {
-  classes: DtoClass[]
+  name: string
+  /** 
+   * might be wiser to use dict here to avoid duplicates from combinations
+   * if it's possible in handlebar template to extract
+   */
+  properties: Property[]
 }
 
-export async function generateDtos(api: any) {
+export async function generateDtos(api: OpenApi) {
   const templateFile = await readFile('src/templates/dto', 'utf-8')
   const template = compile(templateFile)
 
-  const classes: DtoClass[] = []
+  const dtos = {}
 
-  for (const res of api.paths.map((p) => p.responses[0])) {
-    getClassFromSchema(classes, res.schema)
-  }
+  Object.entries<Schema>(api.components.schemas).forEach(([key, schema]) => {
+    toDto(key, schema, dtos, api)
+  })
 
-  const dto: Dto = {
-    classes,
-  }
-
-  const content = template(dto)
+  const content = template({
+    dtos: Object.values(dtos)
+  })
 
   console.log(content)
 }
 
-function getClassFromSchema(classes: DtoClass[], schema: any) {
-  const dtoClass: DtoClass = {
-    name: upperFirst(schema.title),
-    properties: [],
+function toDto(key: string, schema: Schema, dtos: { [name: string]: Dto }, api: OpenApi): Dto {
+  if(dtos[schema.title || key]) {
+    return dtos[schema.title || key]
   }
-  if (schema.type === 'object') {
-    for (const prop of schema.properties!) {
-      if (prop.type === 'object') {
-        dtoClass.properties.push({
-          name: camelCase(prop.title),
-          type: upperFirst(prop.title),
+
+  if(schema.type === 'schema') {
+    const apiSchema = api.components.schemas[(schema as Reference).key]
+    return toDto((schema as Reference).key, apiSchema, dtos, api)
+  }
+
+  /** need to generalize to an interface or type to make oneOf work */
+  const dto: Dto = {
+    name: schema.title ?? key,
+    properties: []
+  }
+
+  if(schema.type === 'allOf') {
+    schema.combinations.forEach(c => {
+      const childDto = toDto((c as Reference).key ?? key, c, dtos, api)
+      dto.properties.push(...childDto.properties)
+    })
+  } else {
+    Object.entries<Schema>(schema.properties).map(([propKey, prop]) => {
+      const name = prop.title ?? propKey
+      if(prop.type === 'object') {
+        dto.properties.push({
+          name,
+          type: toDto(propKey, prop, dtos, api).name,
+          validators: []
         })
-        getClassFromSchema(classes, prop)
       } else if (prop.type === 'array') {
-        dtoClass.properties.push({
-          name: camelCase(prop.title),
-          type: upperFirst(prop.items?.title + '[]'),
+        dto.properties.push({
+          name,
+          type: toDto(propKey, prop.items, dtos, api).name + '[]',
+          validators: []
         })
-        getClassFromSchema(classes, prop)
       } else {
-        dtoClass.properties.push({
-          name: camelCase(prop.title),
+        dto.properties.push({
+          name,
           type: prop.type,
+          validators: []
         })
       }
-    }
-    classes.push(dtoClass)
-  } else if (schema.type === 'array') {
-    getClassFromSchema(classes, schema.items!)
+    })
   }
+
+  dtos[dto.name] = dto
+  return dto
 }

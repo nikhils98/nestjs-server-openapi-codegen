@@ -62,8 +62,15 @@ export interface Schema {
 	properties?: { [key: string]: Schema | Reference };
 	items?: Schema | Reference;
 	enum?: string[];
+	combinations?: (Schema | Reference) []
 }
 
+/** 
+ * Remove this interface
+ * instead introduce reference in type in Schema
+ * or turn these interfaces into classes so I can
+ * differentiate
+ */
 export interface Reference {
 	key: string
 	type: ReferenceType

@@ -55,7 +55,8 @@ components:
       in: path
       required: true
       schema: 
-        $ref: "#/components/schemas/Id"
+        type: string
+        format: uuid
   requestBodies:
     AddGuitarRequestBody:
       content:
@@ -93,9 +94,6 @@ components:
           schema:
             $ref: "#/components/schemas/GuitarWithId"
   schemas:
-    Id:
-      type: string
-      format: uuid
     Guitar:
       title: Guitar
       type: object
@@ -131,7 +129,8 @@ components:
         - type: object
           properties:
             id:
-              $ref: "#/components/schemas/Id"
+              type: string
+              format: uuid
         - $ref: "#/components/schemas/Guitar"
     GetGuitarsResponse:
       type: object
