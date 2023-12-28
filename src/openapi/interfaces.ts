@@ -58,11 +58,13 @@ export interface Schema {
 	type: string;
 	required?: string[]
 	title?: string
-	format?: string;
+	format?: 'uuid';
 	properties?: { [key: string]: Schema | Reference };
 	items?: Schema | Reference;
 	enum?: string[];
 	combinations?: (Schema | Reference) []
+	minimum?: number
+	maximum?: number
 }
 
 /** 

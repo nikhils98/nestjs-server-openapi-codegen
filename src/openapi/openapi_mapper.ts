@@ -75,12 +75,14 @@ function toSchema(schema: any): Schema | Reference {
             combinations: schema.allOf.map(s => toSchema(s))
         }
     } 
-    
+
     return {
         type: schema.type,
         title: schema.title,
         enum: schema.enum,
         format: schema.format,
+        minimum: schema.minimum,
+        maximum: schema.maximum,
         required: schema.required,
         properties: schema.properties ? Object.entries<any>(schema.properties).reduce((properties, [key, prop]) => {
             properties[key] = toSchema(prop)

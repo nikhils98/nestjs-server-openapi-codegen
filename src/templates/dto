@@ -1,10 +1,10 @@
-import { {{#each validators}} {{name}}{{#unless @last}}, {{/unless}}{{/each}} } from 'class-validator';
+import { {{#each validators}} {{this}}{{#unless @last}}, {{/unless}}{{/each}} } from 'class-validator';
 
 {{#each dtos}}
 export class {{name}} {
   {{#each properties}}
   {{#each validators}}
-  {{name}}
+  @{{decorator}}
   {{/each}}
   {{name}}: {{type}}
   

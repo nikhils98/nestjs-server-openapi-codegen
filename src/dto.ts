@@ -1,10 +1,11 @@
 import { readFile } from 'fs/promises'
 import { compile } from 'handlebars'
 import { camelCase, upperFirst } from 'lodash'
-import { OpenApi, Reference, Schema } from './openapi/interfaces'
+import { OpenApi, Reference, Response, Schema } from './openapi/interfaces'
 
 export interface Validator {
   name: string
+  decorator: string
 }
 
 export interface Property {
@@ -22,6 +23,9 @@ export interface Dto {
   properties: Property[]
 }
 
+const allValidators: { [name: string]: Validator } = { }
+
+/** Might need to turn this into a class and store validators in class variable to make imports work efficiently */
 export async function generateDtos(api: OpenApi) {
   const templateFile = await readFile('src/templates/dto', 'utf-8')
   const template = compile(templateFile)
@@ -32,8 +36,14 @@ export async function generateDtos(api: OpenApi) {
     toDto(key, schema, dtos, api)
   })
 
+  Object.entries(api.components.responses).forEach(([key, res]) => {
+    const schema = (res as Reference).type === 'response' ? res : (res as Response).schema
+    toDto(key, schema as any, dtos, api)
+  })
+
   const content = template({
-    dtos: Object.values(dtos)
+    dtos: Object.values(dtos),
+    validators: Object.keys(allValidators)
   })
 
   console.log(content)
@@ -63,23 +73,28 @@ function toDto(key: string, schema: Schema, dtos: { [name: string]: Dto }, api: 
   } else {
     Object.entries<Schema>(schema.properties).map(([propKey, prop]) => {
       const name = prop.title ?? propKey
+      const validateNested = { name: 'ValidateNested', decorator: 'ValidateNested()' }
+
       if(prop.type === 'object') {
         dto.properties.push({
           name,
           type: toDto(propKey, prop, dtos, api).name,
-          validators: []
+          validators: [validateNested]
         })
+        allValidators[validateNested.name] = validateNested
       } else if (prop.type === 'array') {
         dto.properties.push({
           name,
           type: toDto(propKey, prop.items, dtos, api).name + '[]',
-          validators: []
+          validators: [validateNested]
         })
+        allValidators[validateNested.name] = validateNested
       } else {
+        const validators = getValidators(prop)
         dto.properties.push({
           name,
           type: prop.type,
-          validators: []
+          validators
         })
       }
     })
@@ -87,4 +102,28 @@ function toDto(key: string, schema: Schema, dtos: { [name: string]: Dto }, api: 
 
   dtos[dto.name] = dto
   return dto
+}
+
+function getValidators(schema: Schema): Validator[] {
+  const validators: Validator[] = []
+
+  if(schema.format === 'uuid') {
+    const validator = { name: 'IsUUID', decorator: `IsUUID(4)` }
+    validators.push(validator)
+    allValidators[validator.name] = validator
+  }
+
+  if(schema.minimum) {
+    const validator = { name: 'Min', decorator: `Min(${schema.minimum})` }
+    validators.push(validator)
+    allValidators[validator.name] = validator
+  }
+
+  if(schema.maximum) {
+    const validator = { name: 'Max', decorator: `Max(${schema.maximum})` }
+    validators.push(validator)
+    allValidators[validator.name] = validator
+  }
+
+  return validators
 }
